@@ -626,13 +626,17 @@ class WebhookAdapter(BasePlatformAdapter):
                 )
 
         # Check event type filter
-        event_type = (
+        event_type_raw = (
             request.headers.get("X-GitHub-Event", "")
             or request.headers.get("X-GitLab-Event", "")
             or payload.get("event_type", "")
+            or payload.get("event", "")
             or payload.get("type", "")
             or "unknown"
         )
+        event_type = event_type_raw.strip() if isinstance(event_type_raw, str) else "unknown"
+        if not event_type:
+            event_type = "unknown"
         allowed_events = route_config.get("events", [])
         if allowed_events and event_type not in allowed_events:
             logger.debug(
